@@ -15,6 +15,10 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
     <style>
         :root {
             --red: #CE1126;
@@ -686,6 +690,77 @@
             color: var(--medium-gray);
         }
         
+        /* Rich Text Editor Styles */
+        .editor-container {
+            margin-bottom: 20px;
+        }
+        
+        #editor {
+            height: 300px;
+        }
+        
+        /* Image Upload Styles */
+        .image-upload-container {
+            margin-bottom: 20px;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        /* Comments Section */
+        .comments-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--light-gray);
+        }
+        
+        .comments-section h3 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .comment-form {
+            background-color: var(--light-gray);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .comment {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--medium-gray);
+        }
+        
+        .comment-author {
+            font-weight: 600;
+        }
+        
+        .comment-content {
+            line-height: 1.5;
+        }
+        
+        .no-comments {
+            text-align: center;
+            padding: 20px;
+            color: var(--medium-gray);
+            font-style: italic;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .header-container {
@@ -848,6 +923,7 @@
                         <li><a href="#" class="active" onclick="showAdminSection('dashboard')">Dashboard</a></li>
                         <li><a href="#" onclick="showAdminSection('add-post')">Add New Post</a></li>
                         <li><a href="#" onclick="showAdminSection('manage-posts')">Manage Posts</a></li>
+                        <li><a href="#" onclick="showAdminSection('manage-comments')">Manage Comments</a></li>
                         <li><a href="#" onclick="logout()">Logout</a></li>
                     </ul>
                 </div>
@@ -871,6 +947,7 @@
                     <div class="admin-card">
                         <h3>Quick Stats</h3>
                         <p>Total Posts: <span id="total-posts">0</span></p>
+                        <p>Total Comments: <span id="total-comments">0</span></p>
                     </div>
                 </div>
                 
@@ -907,7 +984,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="post-content">Post Content</label>
-                                <textarea id="post-content" class="form-control" rows="10" required placeholder="Write your post content here..."></textarea>
+                                <div id="editor"></div>
                             </div>
                             <button type="submit" class="btn-admin">Publish Post</button>
                         </form>
@@ -920,6 +997,16 @@
                         <h2>Manage Posts</h2>
                         <div id="posts-list">
                             <div class="loading">Loading posts...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Manage Comments Section -->
+                <div id="manage-comments-section" class="admin-section" style="display: none;">
+                    <div class="admin-card">
+                        <h2>Manage Comments</h2>
+                        <div id="comments-list">
+                            <div class="loading">Loading comments...</div>
                         </div>
                     </div>
                 </div>
@@ -966,7 +1053,7 @@
         };
 
         // Initialize Firebase
-        let auth, db;
+        let auth, db, storage;
         try {
             // Initialize Firebase
             firebase.initializeApp(firebaseConfig);
@@ -975,6 +1062,7 @@
             // Initialize Firebase services
             auth = firebase.auth();
             db = firebase.firestore();
+            storage = firebase.storage();
         } catch (error) {
             console.error("Firebase initialization error:", error);
         }
@@ -983,6 +1071,24 @@
         let currentUser = null;
         let allPosts = [];
         let displayedPosts = 6;
+        let quill; // Rich text editor instance
+        
+        // Initialize Quill editor
+        function initQuillEditor() {
+            quill = new Quill('#editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                },
+                placeholder: 'Write your post content here...'
+            });
+        }
         
         // Function to create URL-friendly slug from title
         function createSlug(title) {
@@ -1233,6 +1339,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log("Initializing GhanaLens...");
             
+            // Initialize Quill editor
+            initQuillEditor();
+            
             // Set up login form
             document.getElementById('login-form').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -1266,7 +1375,7 @@
                 const category = document.getElementById('post-category').value;
                 const excerpt = document.getElementById('post-excerpt').value;
                 const featuredImage = document.getElementById('featured-image').value;
-                const content = document.getElementById('post-content').value;
+                const content = quill.root.innerHTML;
                 
                 const newPost = {
                     title: title,
@@ -1283,6 +1392,7 @@
                     .then(() => {
                         showAlert('Post published successfully!', 'success');
                         document.getElementById('add-post-form').reset();
+                        quill.root.innerHTML = '';
                         loadAdminData();
                         loadBlogPosts();
                     })
@@ -1329,13 +1439,16 @@
             const titles = {
                 'dashboard': 'Dashboard',
                 'add-post': 'Add New Post',
-                'manage-posts': 'Manage Posts'
+                'manage-posts': 'Manage Posts',
+                'manage-comments': 'Manage Comments'
             };
             document.getElementById('admin-section-title').textContent = titles[section];
             
             // Load data for specific sections
             if (section === 'manage-posts') {
                 loadPostsForManagement();
+            } else if (section === 'manage-comments') {
+                loadCommentsForManagement();
             }
         }
 
@@ -1345,6 +1458,11 @@
             // Load posts count
             db.collection('posts').get().then((querySnapshot) => {
                 document.getElementById('total-posts').textContent = querySnapshot.size;
+            });
+            
+            // Load comments count
+            db.collection('comments').get().then((querySnapshot) => {
+                document.getElementById('total-comments').textContent = querySnapshot.size;
             });
         }
 
@@ -1373,6 +1491,7 @@
                             <p><strong>Date:</strong> ${post.createdAt?.toDate().toLocaleDateString() || 'N/A'}</p>
                             <p><strong>Status:</strong> ${post.published ? 'Published' : 'Draft'}</p>
                             <div style="margin-top: 15px;">
+                                <button class="btn-admin" onclick="editPost('${doc.id}')">Edit</button>
                                 <button class="btn-danger" onclick="deletePost('${doc.id}')">Delete</button>
                             </div>
                         `;
@@ -1382,6 +1501,49 @@
                 .catch((error) => {
                     postsList.innerHTML = '<p>Error loading posts.</p>';
                 });
+        }
+
+        function loadCommentsForManagement() {
+            if (!db) return;
+            
+            const commentsList = document.getElementById('comments-list');
+            commentsList.innerHTML = '<div class="loading">Loading comments...</div>';
+            
+            db.collection('comments').orderBy('createdAt', 'desc').get()
+                .then((querySnapshot) => {
+                    commentsList.innerHTML = '';
+                    
+                    if (querySnapshot.empty) {
+                        commentsList.innerHTML = '<p>No comments found.</p>';
+                        return;
+                    }
+                    
+                    querySnapshot.forEach((doc) => {
+                        const comment = doc.data();
+                        const commentElement = document.createElement('div');
+                        commentElement.className = 'admin-card';
+                        commentElement.innerHTML = `
+                            <h4>Comment on: ${comment.postTitle || 'Unknown Post'}</h4>
+                            <p><strong>Author:</strong> ${comment.author}</p>
+                            <p><strong>Date:</strong> ${comment.createdAt?.toDate().toLocaleDateString() || 'N/A'}</p>
+                            <p><strong>Comment:</strong> ${comment.content}</p>
+                            <div style="margin-top: 15px;">
+                                <button class="btn-danger" onclick="deleteComment('${doc.id}')">Delete</button>
+                            </div>
+                        `;
+                        commentsList.appendChild(commentElement);
+                    });
+                })
+                .catch((error) => {
+                    commentsList.innerHTML = '<p>Error loading comments.</p>';
+                });
+        }
+
+        function editPost(postId) {
+            // Redirect to edit page or show edit form
+            alert('Edit functionality would open here for post: ' + postId);
+            // In a real implementation, you would show an edit form
+            // or redirect to an edit page with the post ID
         }
 
         function deletePost(postId) {
@@ -1395,6 +1557,20 @@
                     })
                     .catch((error) => {
                         showAlert('Error deleting post: ' + error.message, 'error');
+                    });
+            }
+        }
+
+        function deleteComment(commentId) {
+            if (confirm('Are you sure you want to delete this comment?')) {
+                db.collection('comments').doc(commentId).delete()
+                    .then(() => {
+                        showAlert('Comment deleted successfully!', 'success');
+                        loadCommentsForManagement();
+                        loadAdminData();
+                    })
+                    .catch((error) => {
+                        showAlert('Error deleting comment: ' + error.message, 'error');
                     });
             }
         }
