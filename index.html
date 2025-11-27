@@ -29,6 +29,8 @@
             --light-gray: #f5f5f5;
             --dark-gray: #333;
             --medium-gray: #777;
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
         }
         
         * {
@@ -163,7 +165,7 @@
         
         /* Hero Section */
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('images/hero-bg.jpg');
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
             background-size: cover;
             background-position: center;
             color: white;
@@ -182,7 +184,170 @@
             margin: 0 auto 30px;
         }
         
-        /* Featured Posts */
+        /* Main Posts Grid Section */
+        .main-posts {
+            padding: 80px 0 50px;
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, var(--green), var(--dark-green));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .section-header p {
+            font-size: 1.1rem;
+            color: var(--medium-gray);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .grid-post-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .grid-post-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .grid-post-card.featured {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .post-image-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .grid-post-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+        
+        .grid-post-card:hover .grid-post-image {
+            transform: scale(1.05);
+        }
+        
+        .featured .grid-post-image {
+            height: 100%;
+            min-height: 300px;
+        }
+        
+        .post-category-tag {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--green);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .post-content {
+            padding: 25px;
+        }
+        
+        .featured .post-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--medium-gray);
+        }
+        
+        .post-date {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .post-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            color: var(--dark-gray);
+        }
+        
+        .featured .post-title {
+            font-size: 1.8rem;
+            line-height: 1.3;
+        }
+        
+        .post-excerpt {
+            color: var(--medium-gray);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .read-more {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--green);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .read-more:hover {
+            color: var(--dark-green);
+            gap: 12px;
+        }
+        
+        .view-all-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        /* Featured Posts Section */
+        .featured-posts-section {
+            padding: 60px 0;
+            background: white;
+        }
+        
         .section-title {
             text-align: center;
             margin: 50px 0 30px;
@@ -234,7 +399,7 @@
             object-fit: cover;
         }
         
-        .post-content {
+        .post-content-old {
             padding: 20px;
         }
         
@@ -249,19 +414,19 @@
             margin-bottom: 10px;
         }
         
-        .post-title {
+        .post-title-old {
             font-size: 1.2rem;
             margin-bottom: 10px;
             font-weight: 700;
         }
         
-        .post-excerpt {
+        .post-excerpt-old {
             color: var(--medium-gray);
             margin-bottom: 15px;
             font-size: 0.9rem;
         }
         
-        .post-meta {
+        .post-meta-old {
             display: flex;
             justify-content: space-between;
             color: var(--medium-gray);
@@ -878,6 +1043,19 @@
                 font-size: 2rem;
             }
             
+            .grid-post-card.featured {
+                grid-column: span 1;
+                grid-template-columns: 1fr;
+            }
+            
+            .posts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header h2 {
+                font-size: 2rem;
+            }
+            
             .admin-container {
                 flex-direction: column;
             }
@@ -920,7 +1098,9 @@
             <div class="container header-container">
                 <div class="logo">
                     <!-- Placeholder for logo - replace with your own -->
-                    <img src="images/logo.png" alt="GhanaLens Logo">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(to right, var(--green), var(--yellow), var(--red)); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <span style="color: white; font-weight: bold;">GL</span>
+                    </div>
                     <h1>GhanaLens</h1>
                 </div>
                 <nav>
@@ -941,7 +1121,25 @@
             <div class="container">
                 <h2>Your Window to Ghana</h2>
                 <p>Stay updated with the latest news, stories, and insights from Ghana and beyond</p>
-                <button class="btn btn-filled" onclick="loadBlogPosts()">Refresh Posts</button>
+                <button class="btn btn-filled" onclick="refreshPosts()">Refresh Posts</button>
+                <button class="btn btn-outline" onclick="createSamplePost()">Create Sample Post</button>
+            </div>
+        </section>
+
+        <!-- Main Posts Grid Section -->
+        <section class="main-posts">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Latest Stories</h2>
+                    <p>Discover the most recent and engaging content from GhanaLens</p>
+                </div>
+                <div class="posts-grid" id="posts-grid">
+                    <!-- Posts will be loaded dynamically from Firebase -->
+                    <div class="loading">Loading latest posts...</div>
+                </div>
+                <div class="view-all-container">
+                    <button class="btn btn-filled" onclick="loadMorePosts()">Load More Stories</button>
+                </div>
             </div>
         </section>
 
@@ -951,7 +1149,7 @@
             </div>
             <div class="featured-posts" id="featured-posts">
                 <!-- Posts will be loaded dynamically from Firebase -->
-                <div class="loading">Loading posts...</div>
+                <div class="loading">Loading featured posts...</div>
             </div>
 
             <div class="section-title">
@@ -1025,38 +1223,26 @@
             </div>
             <div class="admin-content">
                 <div class="admin-header">
-                    <h1 class="admin-title" id="admin-section-title">Dashboard</h1>
+                    <h1 id="admin-section-title">Dashboard</h1>
                     <div class="admin-user">
-                        <img src="images/admin-avatar.jpg" alt="Admin Avatar" id="admin-avatar">
-                        <span id="admin-email">Admin User</span>
+                        <span id="admin-email"></span>
                     </div>
                 </div>
-
-                <!-- Alert container -->
+                
                 <div id="alert-container"></div>
-
+                
                 <!-- Dashboard Section -->
                 <div id="dashboard-section" class="admin-section">
                     <div class="admin-card">
                         <h2>Welcome to GhanaLens Admin</h2>
-                        <p>This is your dashboard where you can manage all aspects of your blog.</p>
+                        <p>Manage your blog content, categories, and media from this dashboard.</p>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
-                        <div class="admin-card">
-                            <h3>Total Posts</h3>
-                            <p id="total-posts">0</p>
-                        </div>
-                        <div class="admin-card">
-                            <h3>Categories</h3>
-                            <p id="total-categories">7</p>
-                        </div>
-                        <div class="admin-card">
-                            <h3>Featured Images</h3>
-                            <p id="total-images">0</p>
-                        </div>
+                    <div class="admin-card">
+                        <h3>Quick Stats</h3>
+                        <p>Total Posts: <span id="total-posts">0</span></p>
                     </div>
                 </div>
-
+                
                 <!-- Add Post Section -->
                 <div id="add-post-section" class="admin-section" style="display: none;">
                     <div class="admin-card">
@@ -1069,47 +1255,37 @@
                             <div class="form-group">
                                 <label for="post-category">Category</label>
                                 <select id="post-category" class="form-control" required>
-                                    <option value="">Select Category</option>
-                                    <!-- Categories will be loaded dynamically -->
+                                    <option value="">Select a category</option>
                                 </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="post-content">Content</label>
-                                <div class="editor-toolbar" id="toolbar">
-                                    <button type="button" class="editor-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
-                                    <button type="button" class="editor-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
-                                    <button type="button" class="editor-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
-                                    <button type="button" class="editor-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-                                    <button type="button" class="editor-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                                    <button type="button" class="editor-btn" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
-                                    <button type="button" class="editor-btn" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
-                                    <button type="button" class="editor-btn" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
-                                    <button type="button" class="editor-btn" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
-                                    <button type="button" class="editor-btn" id="insertImageBtn" title="Insert Image"><i class="fas fa-image"></i></button>
-                                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="H1" title="Heading 1">H1</button>
-                                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="H2" title="Heading 2">H2</button>
-                                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="P" title="Paragraph">P</button>
-                                </div>
-                                <div class="editor-content" id="post-content-editor" contenteditable="true"></div>
-                                <input type="hidden" id="post-content" name="post-content">
                             </div>
                             <div class="form-group">
                                 <label for="post-excerpt">Excerpt</label>
                                 <textarea id="post-excerpt" class="form-control" required></textarea>
                             </div>
                             <div class="form-group">
-                                <label>Featured Image</label>
-                                <div class="image-upload" onclick="document.getElementById('featured-image').click()">
-                                    <p>Click to upload featured image</p>
-                                    <img id="image-preview" class="image-preview" src="" alt="Image Preview">
+                                <label for="featured-image">Featured Image</label>
+                                <input type="file" id="featured-image" accept="image/*" required>
+                                <img id="image-preview" class="image-preview">
+                            </div>
+                            <div class="form-group">
+                                <label>Post Content</label>
+                                <div class="editor-toolbar" id="toolbar">
+                                    <button type="button" data-command="bold" class="editor-btn"><i class="fas fa-bold"></i></button>
+                                    <button type="button" data-command="italic" class="editor-btn"><i class="fas fa-italic"></i></button>
+                                    <button type="button" data-command="underline" class="editor-btn"><i class="fas fa-underline"></i></button>
+                                    <button type="button" data-command="insertUnorderedList" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" data-command="insertOrderedList" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                                    <button type="button" data-command="createLink" class="editor-btn"><i class="fas fa-link"></i></button>
+                                    <button type="button" id="insertImageBtn" class="editor-btn"><i class="fas fa-image"></i></button>
                                 </div>
-                                <input type="file" id="featured-image" style="display: none;" accept="image/*">
+                                <div id="post-content-editor" class="editor-content" contenteditable="true"></div>
+                                <input type="hidden" id="post-content">
                             </div>
                             <button type="submit" class="btn-admin">Publish Post</button>
                         </form>
                     </div>
                 </div>
-
+                
                 <!-- Manage Posts Section -->
                 <div id="manage-posts-section" class="admin-section" style="display: none;">
                     <div class="admin-card">
@@ -1119,11 +1295,11 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Categories Section -->
                 <div id="categories-section" class="admin-section" style="display: none;">
                     <div class="admin-card">
-                        <h2>Categories Management</h2>
+                        <h2>Manage Categories</h2>
                         <div class="categories-management">
                             <div>
                                 <h3>Add New Category</h3>
@@ -1141,26 +1317,23 @@
                             </div>
                             <div>
                                 <h3>Existing Categories</h3>
-                                <div class="categories-list" id="categories-list">
+                                <div id="categories-list" class="categories-list">
                                     <!-- Categories will be loaded here -->
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Media Section -->
+                
+                <!-- Media Library Section -->
                 <div id="media-section" class="admin-section" style="display: none;">
                     <div class="admin-card">
                         <h2>Media Library</h2>
                         <div class="form-group">
                             <label>Upload New Image</label>
-                            <div class="image-upload" onclick="document.getElementById('media-upload').click()">
-                                <p>Click to upload image to media library</p>
-                            </div>
-                            <input type="file" id="media-upload" style="display: none;" accept="image/*">
+                            <input type="file" id="media-upload" accept="image/*">
                         </div>
-                        <div class="media-grid" id="media-grid">
+                        <div id="media-grid" class="media-grid">
                             <!-- Media items will be loaded here -->
                         </div>
                     </div>
@@ -1173,18 +1346,18 @@
     <div id="post-modal" class="post-modal">
         <div class="post-modal-content">
             <div class="post-modal-header">
-                <h2 class="post-modal-title" id="post-modal-title">Post Title</h2>
+                <h2 id="post-modal-title">Post Title</h2>
                 <button class="close-modal" onclick="closePostModal()">&times;</button>
             </div>
             <div class="post-modal-body">
                 <img id="post-modal-image" src="" alt="Post Image" class="post-modal-image">
                 <div class="post-modal-meta">
-                    <span id="post-modal-category" class="post-category">Category</span>
+                    <span id="post-modal-category">Category</span>
                     <span id="post-modal-author">By Author</span>
                     <span id="post-modal-date">Date</span>
                 </div>
-                <div class="post-modal-content-text" id="post-modal-content">
-                    <!-- Full post content will be loaded here -->
+                <div id="post-modal-content" class="post-modal-content-text">
+                    <!-- Post content will be loaded here -->
                 </div>
             </div>
         </div>
@@ -1194,7 +1367,7 @@
     <div id="edit-post-modal" class="edit-modal">
         <div class="edit-modal-content">
             <div class="post-modal-header">
-                <h2 class="post-modal-title">Edit Post</h2>
+                <h2>Edit Post</h2>
                 <button class="close-modal" onclick="closeEditModal()">&times;</button>
             </div>
             <div class="edit-modal-body">
@@ -1207,53 +1380,40 @@
                     <div class="form-group">
                         <label for="edit-post-category">Category</label>
                         <select id="edit-post-category" class="form-control" required>
-                            <option value="">Select Category</option>
-                            <!-- Categories will be loaded dynamically -->
+                            <option value="">Select a category</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-post-content">Content</label>
-                        <div class="editor-toolbar" id="edit-toolbar">
-                            <button type="button" class="editor-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
-                            <button type="button" class="editor-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
-                            <button type="button" class="editor-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
-                            <button type="button" class="editor-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-                            <button type="button" class="editor-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                            <button type="button" class="editor-btn" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
-                            <button type="button" class="editor-btn" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
-                            <button type="button" class="editor-btn" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
-                            <button type="button" class="editor-btn" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
-                            <button type="button" class="editor-btn" id="edit-insertImageBtn" title="Insert Image"><i class="fas fa-image"></i></button>
-                            <button type="button" class="editor-btn" data-command="formatBlock" data-value="H1" title="Heading 1">H1</button>
-                            <button type="button" class="editor-btn" data-command="formatBlock" data-value="H2" title="Heading 2">H2</button>
-                            <button type="button" class="editor-btn" data-command="formatBlock" data-value="P" title="Paragraph">P</button>
-                        </div>
-                        <div class="editor-content" id="edit-post-content-editor" contenteditable="true"></div>
-                        <input type="hidden" id="edit-post-content" name="edit-post-content">
                     </div>
                     <div class="form-group">
                         <label for="edit-post-excerpt">Excerpt</label>
                         <textarea id="edit-post-excerpt" class="form-control" required></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Featured Image</label>
-                        <div class="image-upload" onclick="document.getElementById('edit-featured-image').click()">
-                            <p>Click to upload or change featured image</p>
-                            <img id="edit-image-preview" class="image-preview" src="" alt="Image Preview">
-                        </div>
-                        <input type="file" id="edit-featured-image" style="display: none;" accept="image/*">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-post-published">Published</label>
-                        <select id="edit-post-published" class="form-control">
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
+                        <label for="edit-post-published">Status</label>
+                        <select id="edit-post-published" class="form-control" required>
+                            <option value="true">Published</option>
+                            <option value="false">Draft</option>
                         </select>
                     </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button type="submit" class="btn-admin">Update Post</button>
-                        <button type="button" class="btn-danger" onclick="closeEditModal()">Cancel</button>
+                    <div class="form-group">
+                        <label for="edit-featured-image">Featured Image</label>
+                        <input type="file" id="edit-featured-image" accept="image/*">
+                        <img id="edit-image-preview" class="image-preview">
                     </div>
+                    <div class="form-group">
+                        <label>Post Content</label>
+                        <div class="editor-toolbar" id="edit-toolbar">
+                            <button type="button" data-command="bold" class="editor-btn"><i class="fas fa-bold"></i></button>
+                            <button type="button" data-command="italic" class="editor-btn"><i class="fas fa-italic"></i></button>
+                            <button type="button" data-command="underline" class="editor-btn"><i class="fas fa-underline"></i></button>
+                            <button type="button" data-command="insertUnorderedList" class="editor-btn"><i class="fas fa-list-ul"></i></button>
+                            <button type="button" data-command="insertOrderedList" class="editor-btn"><i class="fas fa-list-ol"></i></button>
+                            <button type="button" data-command="createLink" class="editor-btn"><i class="fas fa-link"></i></button>
+                            <button type="button" id="edit-insertImageBtn" class="editor-btn"><i class="fas fa-image"></i></button>
+                        </div>
+                        <div id="edit-post-content-editor" class="editor-content" contenteditable="true"></div>
+                        <input type="hidden" id="edit-post-content">
+                    </div>
+                    <button type="submit" class="btn-admin">Update Post</button>
                 </form>
             </div>
         </div>
@@ -1268,20 +1428,19 @@
             </div>
             <div class="crop-modal-body">
                 <div class="crop-container">
-                    <img id="crop-image" src="" alt="Image to crop" style="max-width: 100%;">
+                    <img id="crop-image" src="" alt="Image to crop">
                 </div>
-                <div class="crop-preview"></div>
                 <div class="crop-controls">
-                    <button type="button" class="btn btn-outline" onclick="rotateImage(-90)"><i class="fas fa-undo"></i> Rotate Left</button>
-                    <button type="button" class="btn btn-outline" onclick="rotateImage(90)"><i class="fas fa-redo"></i> Rotate Right</button>
-                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(16/9)">16:9</button>
-                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(4/3)">4:3</button>
-                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(1)">1:1</button>
-                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(NaN)">Free</button>
+                    <button class="btn-admin" onclick="rotateImage(-90)">Rotate Left</button>
+                    <button class="btn-admin" onclick="rotateImage(90)">Rotate Right</button>
+                    <button class="btn-admin" onclick="setAspectRatio(16/9)">16:9</button>
+                    <button class="btn-admin" onclick="setAspectRatio(4/3)">4:3</button>
+                    <button class="btn-admin" onclick="setAspectRatio(1)">Square</button>
+                    <button class="btn-admin" onclick="setAspectRatio(NaN)">Free</button>
                 </div>
                 <div class="crop-actions">
-                    <button type="button" class="btn btn-outline" onclick="closeCropModal()">Cancel</button>
-                    <button type="button" class="btn-admin" onclick="applyCrop()">Apply Crop</button>
+                    <button class="btn btn-outline" onclick="closeCropModal()">Cancel</button>
+                    <button class="btn-admin" onclick="applyCrop()">Apply Crop</button>
                 </div>
             </div>
         </div>
@@ -1289,8 +1448,8 @@
 
     <!-- Admin Login Modal -->
     <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;">
-        <div style="background-color: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 400px;">
-            <h2 style="text-align: center; margin-bottom: 20px;">Admin Login</h2>
+        <div style="background-color: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px;">
+            <h2 style="margin-bottom: 20px; text-align: center;">Admin Login</h2>
             <div id="login-alert"></div>
             <form id="login-form">
                 <div class="form-group">
@@ -1301,9 +1460,16 @@
                     <label for="login-password">Password</label>
                     <input type="password" id="login-password" class="form-control" required>
                 </div>
-                <button type="submit" class="btn-admin" style="width: 100%;">Login</button>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-outline" onclick="hideLogin()" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-filled" style="flex: 1;">Login</button>
+                </div>
             </form>
-            <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="hideLogin()">Cancel</button>
+            <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; font-size: 0.9rem;">
+                <p><strong>Demo Credentials:</strong></p>
+                <p>Email: admin@ghanalens.com</p>
+                <p>Password: password123</p>
+            </div>
         </div>
     </div>
 
@@ -1319,8 +1485,16 @@
         };
 
         // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        
+        try {
+            // Check if Firebase is already initialized
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
+
         // Initialize Firebase services
         const auth = firebase.auth();
         const db = firebase.firestore();
@@ -1330,6 +1504,7 @@
         const blogSite = document.getElementById('blog-site');
         const adminDashboard = document.getElementById('admin-dashboard');
         const loginModal = document.getElementById('login-modal');
+        const postsGrid = document.getElementById('posts-grid');
         const featuredPosts = document.getElementById('featured-posts');
         const loginAlert = document.getElementById('login-alert');
         const alertContainer = document.getElementById('alert-container');
@@ -1348,6 +1523,8 @@
         let cropper = null;
         let currentEditor = null;
         let currentCropCallback = null;
+        let allPosts = [];
+        let displayedPosts = 6;
         
         // Show admin login modal
         function showLogin() {
@@ -2007,21 +2184,27 @@
             });
         }
         
-        // Load blog posts on the main site
+        // Load blog posts on the main site - FIXED VERSION
         function loadBlogPosts() {
-            featuredPosts.innerHTML = '<div class="loading">Loading posts...</div>';
+            console.log("Loading blog posts...");
+            postsGrid.innerHTML = '<div class="loading">Loading latest posts...</div>';
+            featuredPosts.innerHTML = '<div class="loading">Loading featured posts...</div>';
             
             // Get all posts from Firestore
-            db.collection('posts').get()
+            db.collection('posts')
+                .orderBy('createdAt', 'desc')
+                .get()
                 .then((querySnapshot) => {
+                    console.log(`Found ${querySnapshot.size} posts in database`);
+                    
                     if (querySnapshot.empty) {
-                        featuredPosts.innerHTML = '<p>No posts available. Create your first post in the admin dashboard!</p>';
+                        console.log("No posts found in database");
+                        postsGrid.innerHTML = '<div class="alert alert-error">No posts available. Create your first post in the admin dashboard!</div>';
+                        featuredPosts.innerHTML = '<div class="alert alert-error">No featured posts available.</div>';
                         return;
                     }
                     
-                    featuredPosts.innerHTML = '';
-                    let posts = [];
-                    
+                    allPosts = [];
                     querySnapshot.forEach((doc) => {
                         const postData = doc.data();
                         const post = {
@@ -2029,58 +2212,156 @@
                             ...postData
                         };
                         
-                        // Only show published posts on the main site
+                        // Only show published posts on the main site (default to true if not specified)
                         if (post.published !== false) {
-                            posts.push(post);
+                            allPosts.push(post);
                         }
                     });
                     
+                    console.log(`Filtered to ${allPosts.length} published posts`);
+                    
                     // If no published posts
-                    if (posts.length === 0) {
-                        featuredPosts.innerHTML = '<p>No published posts available.</p>';
+                    if (allPosts.length === 0) {
+                        postsGrid.innerHTML = '<div class="alert alert-error">No published posts available. Check if posts are marked as published.</div>';
+                        featuredPosts.innerHTML = '<div class="alert alert-error">No featured posts available.</div>';
                         return;
                     }
                     
                     // Sort posts by date manually (newest first)
-                    posts.sort((a, b) => {
+                    allPosts.sort((a, b) => {
                         const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
                         const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
                         return dateB - dateA;
                     });
                     
-                    // Limit to 6 posts
-                    posts = posts.slice(0, 6);
+                    // Display posts in main grid
+                    displayPostsGrid();
                     
-                    // Display posts
-                    posts.forEach((post) => {
-                        const postCard = document.createElement('div');
-                        postCard.className = 'post-card';
-                        postCard.setAttribute('data-post-id', post.id);
-                        postCard.innerHTML = `
-                            <img src="${post.featuredImage}" alt="${post.title}" class="post-image" onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'">
-                            <div class="post-content">
-                                <span class="post-category">${post.category}</span>
-                                <h3 class="post-title">${post.title}</h3>
-                                <p class="post-excerpt">${post.excerpt}</p>
-                                <div class="post-meta">
-                                    <span>By GhanaLens</span>
-                                    <span>${post.createdAt?.toDate().toLocaleDateString() || 'Recently'}</span>
-                                </div>
-                            </div>
-                        `;
-                        
-                        // Add click event to open post
-                        postCard.addEventListener('click', function() {
-                            openPostModal(post.id);
-                        });
-                        
-                        featuredPosts.appendChild(postCard);
-                    });
+                    // Display featured posts (limit to 6)
+                    displayFeaturedPosts();
                 })
                 .catch((error) => {
                     console.error("Error getting posts: ", error);
-                    featuredPosts.innerHTML = '<p>Error loading posts. Check console for details.</p>';
+                    let errorMessage = 'Error loading posts. ';
+                    
+                    if (error.code === 'permission-denied') {
+                        errorMessage += 'Firestore permission denied. Check your security rules.';
+                    } else if (error.code === 'unavailable') {
+                        errorMessage += 'Network error. Please check your connection.';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    
+                    postsGrid.innerHTML = `<div class="alert alert-error">${errorMessage}</div>`;
+                    featuredPosts.innerHTML = `<div class="alert alert-error">${errorMessage}</div>`;
                 });
+        }
+        
+        // Display posts in the main grid layout - SHOWS ONLY TITLE AND IMAGE
+        function displayPostsGrid() {
+            postsGrid.innerHTML = '';
+            
+            const postsToShow = allPosts.slice(0, displayedPosts);
+            
+            if (postsToShow.length === 0) {
+                postsGrid.innerHTML = '<p>No posts to display.</p>';
+                return;
+            }
+            
+            postsToShow.forEach((post, index) => {
+                const isFeatured = index === 0; // Make first post featured
+                
+                const postCard = document.createElement('div');
+                postCard.className = `grid-post-card ${isFeatured ? 'featured' : ''}`;
+                postCard.setAttribute('data-post-id', post.id);
+                
+                // Add click event to open post modal
+                postCard.addEventListener('click', function() {
+                    openPostModal(post.id);
+                });
+                
+                const formattedDate = post.createdAt?.toDate().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) || 'Recently';
+                
+                if (isFeatured) {
+                    postCard.innerHTML = `
+                        <div class="post-image-container">
+                            <img src="${post.featuredImage}" alt="${post.title}" class="grid-post-image" onerror="this.src='https://via.placeholder.com/600x400?text=Featured+Story'">
+                            <div class="post-category-tag">${post.category}</div>
+                        </div>
+                        <div class="post-content">
+                            <h3 class="post-title">${post.title}</h3>
+                            <div class="post-meta">
+                                <span class="post-date"><i class="far fa-calendar"></i> ${formattedDate}</span>
+                                <span><i class="far fa-user"></i> GhanaLens</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    postCard.innerHTML = `
+                        <div class="post-image-container">
+                            <img src="${post.featuredImage}" alt="${post.title}" class="grid-post-image" onerror="this.src='https://via.placeholder.com/400x250?text=Story'">
+                            <div class="post-category-tag">${post.category}</div>
+                        </div>
+                        <div class="post-content">
+                            <h3 class="post-title">${post.title}</h3>
+                            <div class="post-meta">
+                                <span class="post-date"><i class="far fa-calendar"></i> ${formattedDate}</span>
+                                <span><i class="far fa-user"></i> GhanaLens</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                postsGrid.appendChild(postCard);
+            });
+        }
+        
+        // Display featured posts in the old layout
+        function displayFeaturedPosts() {
+            featuredPosts.innerHTML = '';
+            
+            // Get posts for featured section (skip first one as it's in the main grid)
+            const featuredPostsToShow = allPosts.slice(1, 7);
+            
+            if (featuredPostsToShow.length === 0) {
+                featuredPosts.innerHTML = '<p>No featured posts available.</p>';
+                return;
+            }
+            
+            featuredPostsToShow.forEach((post) => {
+                const postCard = document.createElement('div');
+                postCard.className = 'post-card';
+                postCard.setAttribute('data-post-id', post.id);
+                postCard.innerHTML = `
+                    <img src="${post.featuredImage}" alt="${post.title}" class="post-image" onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'">
+                    <div class="post-content-old">
+                        <span class="post-category">${post.category}</span>
+                        <h3 class="post-title-old">${post.title}</h3>
+                        <p class="post-excerpt-old">${post.excerpt}</p>
+                        <div class="post-meta-old">
+                            <span>By GhanaLens</span>
+                            <span>${post.createdAt?.toDate().toLocaleDateString() || 'Recently'}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Add click event to open post
+                postCard.addEventListener('click', function() {
+                    openPostModal(post.id);
+                });
+                
+                featuredPosts.appendChild(postCard);
+            });
+        }
+        
+        // Load more posts for the grid
+        function loadMorePosts() {
+            displayedPosts += 6;
+            displayPostsGrid();
         }
         
         // Open post modal with full content
@@ -2284,8 +2565,43 @@
             }
         }
         
+        // Create sample post for testing
+        function createSamplePost() {
+            const samplePost = {
+                title: "Welcome to GhanaLens",
+                content: "<p>This is your first post on GhanaLens. Edit or delete this post in the admin dashboard.</p><p>GhanaLens is your window to Ghana, bringing you the latest news, stories, and insights from Ghana and beyond.</p>",
+                excerpt: "Welcome to GhanaLens - your window to Ghana. Discover the latest news and stories from Ghana.",
+                category: "News",
+                featuredImage: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+                author: "GhanaLens",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                published: true
+            };
+            
+            db.collection('posts').add(samplePost)
+                .then(() => {
+                    console.log("Sample post created successfully");
+                    showAlert('Sample post created successfully!', 'success');
+                    loadBlogPosts();
+                })
+                .catch((error) => {
+                    console.error("Error creating sample post:", error);
+                    showAlert('Error creating sample post: ' + error.message, 'error');
+                });
+        }
+        
+        // Refresh posts function
+        function refreshPosts() {
+            console.log("Manually refreshing posts...");
+            displayedPosts = 6; // Reset to initial count
+            loadBlogPosts();
+        }
+        
         // Initialize the blog
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM loaded, initializing blog...");
+            
+            // Load blog posts
             loadBlogPosts();
             
             // Initialize editors after DOM is fully loaded
