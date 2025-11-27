@@ -15,6 +15,10 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Cropper.js for image cropping -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
     <style>
         :root {
             --red: #CE1126;
@@ -786,6 +790,79 @@
             overflow-y: auto;
         }
         
+        /* Image Crop Modal */
+        .crop-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .crop-modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .crop-modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .crop-modal-body {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .crop-container {
+            width: 100%;
+            height: 400px;
+            background-color: #f5f5f5;
+            overflow: hidden;
+        }
+        
+        .crop-preview {
+            width: 100%;
+            height: 200px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .crop-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .crop-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .header-container {
@@ -825,6 +902,14 @@
             .edit-modal-content {
                 width: 98%;
             }
+            
+            .crop-modal-content {
+                width: 95%;
+            }
+            
+            .crop-container {
+                height: 300px;
+            }
         }
     </style>
 </head>
@@ -836,7 +921,7 @@
                 <div class="logo">
                     <!-- Placeholder for logo - replace with your own -->
                     <img src="images/logo.png" alt="GhanaLens Logo">
-                    <h1></h1>
+                    <h1>GhanaLens</h1>
                 </div>
                 <nav>
                     <ul>
@@ -1174,6 +1259,34 @@
         </div>
     </div>
 
+    <!-- Image Crop Modal -->
+    <div id="crop-modal" class="crop-modal">
+        <div class="crop-modal-content">
+            <div class="crop-modal-header">
+                <h3>Crop Image</h3>
+                <button class="close-modal" onclick="closeCropModal()">&times;</button>
+            </div>
+            <div class="crop-modal-body">
+                <div class="crop-container">
+                    <img id="crop-image" src="" alt="Image to crop" style="max-width: 100%;">
+                </div>
+                <div class="crop-preview"></div>
+                <div class="crop-controls">
+                    <button type="button" class="btn btn-outline" onclick="rotateImage(-90)"><i class="fas fa-undo"></i> Rotate Left</button>
+                    <button type="button" class="btn btn-outline" onclick="rotateImage(90)"><i class="fas fa-redo"></i> Rotate Right</button>
+                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(16/9)">16:9</button>
+                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(4/3)">4:3</button>
+                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(1)">1:1</button>
+                    <button type="button" class="btn btn-outline" onclick="setAspectRatio(NaN)">Free</button>
+                </div>
+                <div class="crop-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeCropModal()">Cancel</button>
+                    <button type="button" class="btn-admin" onclick="applyCrop()">Apply Crop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Login Modal -->
     <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;">
         <div style="background-color: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 400px;">
@@ -1223,6 +1336,7 @@
         const postsList = document.getElementById('posts-list');
         const postModal = document.getElementById('post-modal');
         const editPostModal = document.getElementById('edit-post-modal');
+        const cropModal = document.getElementById('crop-modal');
         const mediaGrid = document.getElementById('media-grid');
         const categoriesList = document.getElementById('categories-list');
         
@@ -1231,6 +1345,9 @@
         let currentImageFile = null;
         let editImageFile = null;
         let categories = [];
+        let cropper = null;
+        let currentEditor = null;
+        let currentCropCallback = null;
         
         // Show admin login modal
         function showLogin() {
@@ -1322,10 +1439,8 @@
             loadMediaLibrary();
         }
         
-        // Load categories from Firestore - COMPLETELY REWRITTEN
+        // Load categories from Firestore
         function loadCategories() {
-            console.log("Loading categories...");
-            
             return db.collection('categories').orderBy('name').get()
                 .then((querySnapshot) => {
                     categories = [];
@@ -1342,7 +1457,6 @@
                     
                     // If no categories exist, create default ones
                     if (querySnapshot.empty) {
-                        console.log("No categories found, creating default categories...");
                         const defaultCategories = [
                             { name: 'News', description: 'General news from Ghana' },
                             { name: 'Local News', description: 'Local news and events' },
@@ -1362,7 +1476,6 @@
                         });
                         
                         return Promise.all(promises).then(() => {
-                            console.log("Default categories created, reloading...");
                             // Reload categories after adding defaults
                             return loadCategories();
                         });
@@ -1388,8 +1501,6 @@
                         categorySelect.appendChild(option);
                         editCategorySelect.appendChild(editOption);
                     });
-                    
-                    console.log(`Loaded ${categories.length} categories:`, categories.map(c => c.name));
                     
                     // Update categories list in admin
                     updateCategoriesList();
@@ -1738,48 +1849,47 @@
             }
         });
         
-        // Edit post function - COMPLETELY REWRITTEN
+        // Edit post function
         function editPost(postId) {
-            console.log("Editing post:", postId);
-            
-            // First ensure categories are loaded
-            loadCategories().then(() => {
-                console.log("Categories loaded, now fetching post data...");
-                // After categories are loaded, fetch the post
+            // Ensure categories are loaded first
+            if (categories.length === 0) {
+                loadCategories().then(() => {
+                    // After categories are loaded, fetch the post
+                    fetchPostForEditing(postId);
+                }).catch((error) => {
+                    console.error("Error loading categories for edit: ", error);
+                    // Still try to fetch the post even if categories fail
+                    fetchPostForEditing(postId);
+                });
+            } else {
                 fetchPostForEditing(postId);
-            }).catch((error) => {
-                console.error("Error loading categories for edit: ", error);
-                // Still try to fetch the post even if categories fail
-                fetchPostForEditing(postId);
-            });
+            }
         }
         
-        // Fetch post data for editing - COMPLETELY REWRITTEN
+        // Fetch post data for editing
         function fetchPostForEditing(postId) {
-            console.log("Fetching post data for:", postId);
-            
             // Fetch the post data
             db.collection('posts').doc(postId).get()
                 .then((doc) => {
                     if (doc.exists) {
                         const post = doc.data();
-                        console.log("Post data:", post);
                         
                         // Populate the edit form
                         document.getElementById('edit-post-id').value = postId;
                         document.getElementById('edit-post-title').value = post.title;
                         
-                        // Set category - IMPORTANT: Wait for DOM to be ready
-                        setTimeout(() => {
-                            const editCategorySelect = document.getElementById('edit-post-category');
-                            console.log("Available categories in dropdown:", Array.from(editCategorySelect.options).map(opt => opt.value));
-                            console.log("Setting category to:", post.category);
-                            
+                        // Set category - wait for categories to be loaded
+                        const editCategorySelect = document.getElementById('edit-post-category');
+                        
+                        // If categories are loaded, set the value directly
+                        if (categories.length > 0) {
                             editCategorySelect.value = post.category;
-                            
-                            // Verify the value was set
-                            console.log("Category select value after setting:", editCategorySelect.value);
-                        }, 100);
+                        } else {
+                            // If categories aren't loaded yet, wait a bit and try again
+                            setTimeout(() => {
+                                editCategorySelect.value = post.category;
+                            }, 100);
+                        }
                         
                         document.getElementById('edit-post-content-editor').innerHTML = post.content;
                         document.getElementById('edit-post-excerpt').value = post.excerpt;
@@ -1792,7 +1902,6 @@
                         
                         // Show the edit modal
                         editPostModal.style.display = 'block';
-                        console.log("Edit modal displayed");
                     } else {
                         showAlert('Post not found!', 'error');
                     }
@@ -2024,15 +2133,22 @@
             }
         });
         
+        cropModal.addEventListener('click', function(event) {
+            if (event.target === cropModal) {
+                closeCropModal();
+            }
+        });
+        
         // Close modal with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closePostModal();
                 closeEditModal();
+                closeCropModal();
             }
         });
         
-        // Initialize rich text editor
+        // Initialize rich text editor with image cropping
         function initEditor(toolbarId, editorId, hiddenInputId) {
             const toolbar = document.getElementById(toolbarId);
             const editor = document.getElementById(editorId);
@@ -2069,16 +2185,103 @@
                 hiddenInput.value = editor.innerHTML;
             });
             
-            // Handle image insertion
+            // Handle image insertion with cropping
             const insertImageBtn = document.getElementById(toolbarId === 'toolbar' ? 'insertImageBtn' : 'edit-insertImageBtn');
             insertImageBtn.addEventListener('click', function() {
-                const url = prompt('Enter image URL:');
-                if (url) {
-                    document.execCommand('insertImage', false, url);
-                    hiddenInput.value = editor.innerHTML;
-                    editor.focus();
-                }
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        currentEditor = editor;
+                        openCropModal(file, function(croppedImageUrl) {
+                            // Insert the cropped image into the editor
+                            document.execCommand('insertImage', false, croppedImageUrl);
+                            hiddenInput.value = editor.innerHTML;
+                            editor.focus();
+                        });
+                    }
+                };
+                input.click();
             });
+        }
+        
+        // Open crop modal
+        function openCropModal(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const cropImage = document.getElementById('crop-image');
+                cropImage.src = e.target.result;
+                
+                // Show the crop modal
+                cropModal.style.display = 'flex';
+                
+                // Initialize cropper
+                setTimeout(() => {
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 16 / 9,
+                        viewMode: 1,
+                        preview: '.crop-preview',
+                        responsive: true,
+                        autoCropArea: 0.8,
+                        movable: true,
+                        rotatable: true,
+                        scalable: true,
+                        zoomable: true,
+                        cropBoxResizable: true
+                    });
+                    
+                    currentCropCallback = callback;
+                }, 100);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Close crop modal
+        function closeCropModal() {
+            cropModal.style.display = 'none';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            currentCropCallback = null;
+        }
+        
+        // Rotate image in cropper
+        function rotateImage(degrees) {
+            if (cropper) {
+                cropper.rotate(degrees);
+            }
+        }
+        
+        // Set aspect ratio for cropper
+        function setAspectRatio(ratio) {
+            if (cropper) {
+                cropper.setAspectRatio(ratio);
+            }
+        }
+        
+        // Apply crop and get the cropped image
+        function applyCrop() {
+            if (cropper && currentCropCallback) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 800,
+                    height: 600,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high'
+                });
+                
+                canvas.toBlob(function(blob) {
+                    const croppedImageUrl = URL.createObjectURL(blob);
+                    currentCropCallback(croppedImageUrl);
+                    closeCropModal();
+                }, 'image/jpeg', 0.9);
+            }
         }
         
         // Initialize the blog
