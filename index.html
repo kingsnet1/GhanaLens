@@ -12,6 +12,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
     
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --red: #CE1126;
@@ -494,6 +497,21 @@
             background-color: var(--dark-green);
         }
         
+        .btn-danger {
+            background-color: var(--red);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-danger:hover {
+            background-color: #a00;
+        }
+        
         .image-upload {
             border: 2px dashed #ddd;
             border-radius: 4px;
@@ -619,6 +637,155 @@
             margin-bottom: 15px;
         }
         
+        /* Rich Text Editor */
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .editor-btn {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .editor-btn:hover {
+            background-color: #e9e9e9;
+        }
+        
+        .editor-btn.active {
+            background-color: var(--green);
+            color: white;
+        }
+        
+        .editor-content {
+            min-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 4px 4px;
+            padding: 15px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .editor-content:focus {
+            outline: none;
+            border-color: var(--green);
+        }
+        
+        /* Media Library */
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .media-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .media-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .media-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .media-action-btn {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .media-action-btn:hover {
+            background: rgba(0,0,0,0.9);
+        }
+        
+        /* Categories Management */
+        .categories-management {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        
+        .category-form {
+            margin-bottom: 20px;
+        }
+        
+        .categories-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .category-item-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Edit Post Modal */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 4000;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+        
+        .edit-modal-content {
+            background-color: white;
+            margin: 20px auto;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 1000px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .edit-modal-body {
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .header-container {
@@ -649,6 +816,14 @@
             
             .post-modal-title {
                 font-size: 1.4rem;
+            }
+            
+            .categories-management {
+                grid-template-columns: 1fr;
+            }
+            
+            .edit-modal-content {
+                width: 98%;
             }
         }
     </style>
@@ -810,18 +985,28 @@
                                 <label for="post-category">Category</label>
                                 <select id="post-category" class="form-control" required>
                                     <option value="">Select Category</option>
-                                    <option value="News">News</option>
-                                    <option value="Local News">Local News</option>
-                                    <option value="Sports">Sports</option>
-                                    <option value="Business">Business</option>
-                                    <option value="Entertainment">Entertainment</option>
-                                    <option value="Africa">Africa</option>
-                                    <option value="Technology">Technology</option>
+                                    <!-- Categories will be loaded dynamically -->
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="post-content">Content</label>
-                                <textarea id="post-content" class="form-control" required></textarea>
+                                <div class="editor-toolbar" id="toolbar">
+                                    <button type="button" class="editor-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                                    <button type="button" class="editor-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                                    <button type="button" class="editor-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                                    <button type="button" class="editor-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" class="editor-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                                    <button type="button" class="editor-btn" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
+                                    <button type="button" class="editor-btn" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
+                                    <button type="button" class="editor-btn" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
+                                    <button type="button" class="editor-btn" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
+                                    <button type="button" class="editor-btn" id="insertImageBtn" title="Insert Image"><i class="fas fa-image"></i></button>
+                                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="H1" title="Heading 1">H1</button>
+                                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="H2" title="Heading 2">H2</button>
+                                    <button type="button" class="editor-btn" data-command="formatBlock" data-value="P" title="Paragraph">P</button>
+                                </div>
+                                <div class="editor-content" id="post-content-editor" contenteditable="true"></div>
+                                <input type="hidden" id="post-content" name="post-content">
                             </div>
                             <div class="form-group">
                                 <label for="post-excerpt">Excerpt</label>
@@ -853,8 +1038,29 @@
                 <!-- Categories Section -->
                 <div id="categories-section" class="admin-section" style="display: none;">
                     <div class="admin-card">
-                        <h2>Categories</h2>
-                        <p>This section would allow you to manage categories.</p>
+                        <h2>Categories Management</h2>
+                        <div class="categories-management">
+                            <div>
+                                <h3>Add New Category</h3>
+                                <form id="add-category-form" class="category-form">
+                                    <div class="form-group">
+                                        <label for="category-name">Category Name</label>
+                                        <input type="text" id="category-name" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="category-description">Description</label>
+                                        <textarea id="category-description" class="form-control"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn-admin">Add Category</button>
+                                </form>
+                            </div>
+                            <div>
+                                <h3>Existing Categories</h3>
+                                <div class="categories-list" id="categories-list">
+                                    <!-- Categories will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -862,7 +1068,16 @@
                 <div id="media-section" class="admin-section" style="display: none;">
                     <div class="admin-card">
                         <h2>Media Library</h2>
-                        <p>This section would display all uploaded images.</p>
+                        <div class="form-group">
+                            <label>Upload New Image</label>
+                            <div class="image-upload" onclick="document.getElementById('media-upload').click()">
+                                <p>Click to upload image to media library</p>
+                            </div>
+                            <input type="file" id="media-upload" style="display: none;" accept="image/*">
+                        </div>
+                        <div class="media-grid" id="media-grid">
+                            <!-- Media items will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -886,6 +1101,75 @@
                 <div class="post-modal-content-text" id="post-modal-content">
                     <!-- Full post content will be loaded here -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Post Modal -->
+    <div id="edit-post-modal" class="edit-modal">
+        <div class="edit-modal-content">
+            <div class="post-modal-header">
+                <h2 class="post-modal-title">Edit Post</h2>
+                <button class="close-modal" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="edit-modal-body">
+                <form id="edit-post-form">
+                    <input type="hidden" id="edit-post-id">
+                    <div class="form-group">
+                        <label for="edit-post-title">Post Title</label>
+                        <input type="text" id="edit-post-title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-post-category">Category</label>
+                        <select id="edit-post-category" class="form-control" required>
+                            <option value="">Select Category</option>
+                            <!-- Categories will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-post-content">Content</label>
+                        <div class="editor-toolbar" id="edit-toolbar">
+                            <button type="button" class="editor-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                            <button type="button" class="editor-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                            <button type="button" class="editor-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                            <button type="button" class="editor-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                            <button type="button" class="editor-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                            <button type="button" class="editor-btn" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
+                            <button type="button" class="editor-btn" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
+                            <button type="button" class="editor-btn" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
+                            <button type="button" class="editor-btn" data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
+                            <button type="button" class="editor-btn" id="edit-insertImageBtn" title="Insert Image"><i class="fas fa-image"></i></button>
+                            <button type="button" class="editor-btn" data-command="formatBlock" data-value="H1" title="Heading 1">H1</button>
+                            <button type="button" class="editor-btn" data-command="formatBlock" data-value="H2" title="Heading 2">H2</button>
+                            <button type="button" class="editor-btn" data-command="formatBlock" data-value="P" title="Paragraph">P</button>
+                        </div>
+                        <div class="editor-content" id="edit-post-content-editor" contenteditable="true"></div>
+                        <input type="hidden" id="edit-post-content" name="edit-post-content">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-post-excerpt">Excerpt</label>
+                        <textarea id="edit-post-excerpt" class="form-control" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Featured Image</label>
+                        <div class="image-upload" onclick="document.getElementById('edit-featured-image').click()">
+                            <p>Click to upload or change featured image</p>
+                            <img id="edit-image-preview" class="image-preview" src="" alt="Image Preview">
+                        </div>
+                        <input type="file" id="edit-featured-image" style="display: none;" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-post-published">Published</label>
+                        <select id="edit-post-published" class="form-control">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn-admin">Update Post</button>
+                        <button type="button" class="btn-danger" onclick="closeEditModal()">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -938,10 +1222,15 @@
         const alertContainer = document.getElementById('alert-container');
         const postsList = document.getElementById('posts-list');
         const postModal = document.getElementById('post-modal');
+        const editPostModal = document.getElementById('edit-post-modal');
+        const mediaGrid = document.getElementById('media-grid');
+        const categoriesList = document.getElementById('categories-list');
         
         // Global variables
         let currentUser = null;
         let currentImageFile = null;
+        let editImageFile = null;
+        let categories = [];
         
         // Show admin login modal
         function showLogin() {
@@ -1025,6 +1314,149 @@
             
             // Load posts for management
             loadPostsForManagement();
+            
+            // Load categories
+            loadCategories();
+            
+            // Load media library
+            loadMediaLibrary();
+        }
+        
+        // Load categories from Firestore
+        function loadCategories() {
+            db.collection('categories').get()
+                .then((querySnapshot) => {
+                    categories = [];
+                    const categorySelect = document.getElementById('post-category');
+                    const editCategorySelect = document.getElementById('edit-post-category');
+                    
+                    // Clear existing options except the first one
+                    while (categorySelect.children.length > 1) {
+                        categorySelect.removeChild(categorySelect.lastChild);
+                    }
+                    while (editCategorySelect.children.length > 1) {
+                        editCategorySelect.removeChild(editCategorySelect.lastChild);
+                    }
+                    
+                    if (querySnapshot.empty) {
+                        // Add default categories if none exist
+                        const defaultCategories = [
+                            { name: 'News', description: 'General news from Ghana' },
+                            { name: 'Local News', description: 'Local news and events' },
+                            { name: 'Sports', description: 'Sports news and updates' },
+                            { name: 'Business', description: 'Business and economy news' },
+                            { name: 'Entertainment', description: 'Entertainment and lifestyle' },
+                            { name: 'Africa', description: 'News from across Africa' },
+                            { name: 'Technology', description: 'Tech news and innovations' }
+                        ];
+                        
+                        defaultCategories.forEach(cat => {
+                            db.collection('categories').add({
+                                name: cat.name,
+                                description: cat.description,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        });
+                        
+                        // Reload categories after adding defaults
+                        loadCategories();
+                        return;
+                    }
+                    
+                    querySnapshot.forEach((doc) => {
+                        const category = {
+                            id: doc.id,
+                            ...doc.data()
+                        };
+                        categories.push(category);
+                        
+                        // Add to category dropdowns
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = category.name;
+                        
+                        const editOption = option.cloneNode(true);
+                        
+                        categorySelect.appendChild(option);
+                        editCategorySelect.appendChild(editOption);
+                    });
+                    
+                    // Update categories list in admin
+                    updateCategoriesList();
+                })
+                .catch((error) => {
+                    console.error("Error loading categories: ", error);
+                });
+        }
+        
+        // Update categories list in admin panel
+        function updateCategoriesList() {
+            categoriesList.innerHTML = '';
+            
+            if (categories.length === 0) {
+                categoriesList.innerHTML = '<p>No categories found.</p>';
+                return;
+            }
+            
+            categories.forEach(category => {
+                const categoryItem = document.createElement('div');
+                categoryItem.className = 'category-item-admin';
+                categoryItem.innerHTML = `
+                    <div>
+                        <strong>${category.name}</strong>
+                        <p style="font-size: 0.8rem; color: var(--medium-gray); margin-top: 5px;">${category.description || 'No description'}</p>
+                    </div>
+                    <div>
+                        <button class="btn-danger" onclick="deleteCategory('${category.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                
+                categoriesList.appendChild(categoryItem);
+            });
+        }
+        
+        // Load media library
+        function loadMediaLibrary() {
+            mediaGrid.innerHTML = '<div class="loading">Loading media...</div>';
+            
+            // List all files in the posts folder
+            const storageRef = storage.ref();
+            const postsRef = storageRef.child('posts');
+            
+            postsRef.listAll()
+                .then((result) => {
+                    mediaGrid.innerHTML = '';
+                    
+                    if (result.items.length === 0) {
+                        mediaGrid.innerHTML = '<p>No images found in media library.</p>';
+                        return;
+                    }
+                    
+                    result.items.forEach((itemRef) => {
+                        // Get the download URL for each image
+                        itemRef.getDownloadURL()
+                            .then((url) => {
+                                const mediaItem = document.createElement('div');
+                                mediaItem.className = 'media-item';
+                                mediaItem.innerHTML = `
+                                    <img src="${url}" alt="Media Image">
+                                    <div class="media-actions">
+                                        <button class="media-action-btn" onclick="copyImageUrl('${url}')" title="Copy URL"><i class="fas fa-copy"></i></button>
+                                        <button class="media-action-btn" onclick="deleteImage('${itemRef.fullPath}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                `;
+                                
+                                mediaGrid.appendChild(mediaItem);
+                            })
+                            .catch((error) => {
+                                console.error("Error getting download URL: ", error);
+                            });
+                    });
+                })
+                .catch((error) => {
+                    console.error("Error loading media library: ", error);
+                    mediaGrid.innerHTML = '<p>Error loading media library.</p>';
+                });
         }
         
         // Load posts for management section
@@ -1051,6 +1483,7 @@
                             <h3>${post.title}</h3>
                             <p><strong>Category:</strong> ${post.category}</p>
                             <p><strong>Date:</strong> ${post.createdAt?.toDate().toLocaleDateString() || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${post.published ? 'Published' : 'Draft'}</p>
                             <div style="margin-top: 15px;">
                                 <button class="btn-admin" onclick="editPost('${postId}')">Edit</button>
                                 <button class="btn btn-outline" onclick="deletePost('${postId}')">Delete</button>
@@ -1095,6 +1528,10 @@
             // Load data for specific sections
             if (section === 'manage-posts') {
                 loadPostsForManagement();
+            } else if (section === 'media') {
+                loadMediaLibrary();
+            } else if (section === 'categories') {
+                loadCategories();
             }
         }
         
@@ -1104,7 +1541,7 @@
             
             const title = document.getElementById('post-title').value;
             const category = document.getElementById('post-category').value;
-            const content = document.getElementById('post-content').value;
+            const content = document.getElementById('post-content-editor').innerHTML;
             const excerpt = document.getElementById('post-excerpt').value;
             
             if (!currentImageFile) {
@@ -1137,6 +1574,7 @@
                 .then(() => {
                     showAlert('Post published successfully!', 'success');
                     document.getElementById('add-post-form').reset();
+                    document.getElementById('post-content-editor').innerHTML = '';
                     document.getElementById('image-preview').style.display = 'none';
                     currentImageFile = null;
                     
@@ -1151,6 +1589,103 @@
                     showAlert('Error publishing post: ' + error.message, 'error');
                 });
         });
+        
+        // Handle category form submission
+        document.getElementById('add-category-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('category-name').value;
+            const description = document.getElementById('category-description').value;
+            
+            // Check if category already exists
+            const existingCategory = categories.find(cat => cat.name.toLowerCase() === name.toLowerCase());
+            if (existingCategory) {
+                showAlert('Category already exists!', 'error');
+                return;
+            }
+            
+            // Add category to Firestore
+            db.collection('categories').add({
+                name: name,
+                description: description,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                showAlert('Category added successfully!', 'success');
+                document.getElementById('add-category-form').reset();
+                loadCategories();
+            })
+            .catch((error) => {
+                console.error("Error adding category: ", error);
+                showAlert('Error adding category: ' + error.message, 'error');
+            });
+        });
+        
+        // Delete category
+        function deleteCategory(categoryId) {
+            if (confirm('Are you sure you want to delete this category? Posts using this category will not be affected.')) {
+                db.collection('categories').doc(categoryId).delete()
+                    .then(() => {
+                        showAlert('Category deleted successfully!', 'success');
+                        loadCategories();
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting category: ", error);
+                        showAlert('Error deleting category: ' + error.message, 'error');
+                    });
+            }
+        }
+        
+        // Upload to media library
+        document.getElementById('media-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Upload image to Firebase Storage
+                const storageRef = storage.ref();
+                const imageRef = storageRef.child('posts/' + Date.now() + '_' + file.name);
+                
+                imageRef.put(file)
+                    .then(() => {
+                        showAlert('Image uploaded to media library!', 'success');
+                        loadMediaLibrary();
+                        document.getElementById('media-upload').value = '';
+                    })
+                    .catch((error) => {
+                        console.error("Error uploading image: ", error);
+                        showAlert('Error uploading image: ' + error.message, 'error');
+                    });
+            }
+        });
+        
+        // Copy image URL to clipboard
+        function copyImageUrl(url) {
+            navigator.clipboard.writeText(url)
+                .then(() => {
+                    showAlert('Image URL copied to clipboard!', 'success');
+                })
+                .catch((error) => {
+                    console.error("Error copying URL: ", error);
+                    showAlert('Error copying URL: ' + error.message, 'error');
+                });
+        }
+        
+        // Delete image from storage
+        function deleteImage(fullPath) {
+            if (confirm('Are you sure you want to delete this image?')) {
+                const storageRef = storage.ref();
+                const imageRef = storageRef.child(fullPath);
+                
+                imageRef.delete()
+                    .then(() => {
+                        showAlert('Image deleted successfully!', 'success');
+                        loadMediaLibrary();
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting image: ", error);
+                        showAlert('Error deleting image: ' + error.message, 'error');
+                    });
+            }
+        }
         
         // Image preview and file selection
         document.getElementById('featured-image').addEventListener('change', function(e) {
@@ -1167,10 +1702,117 @@
             }
         });
         
+        // Edit image preview
+        document.getElementById('edit-featured-image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                editImageFile = file;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('edit-image-preview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        
         // Edit post function
         function editPost(postId) {
-            // In a real implementation, this would open an edit form
-            alert('Edit functionality for post: ' + postId);
+            // Fetch the post data
+            db.collection('posts').doc(postId).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const post = doc.data();
+                        
+                        // Populate the edit form
+                        document.getElementById('edit-post-id').value = postId;
+                        document.getElementById('edit-post-title').value = post.title;
+                        document.getElementById('edit-post-category').value = post.category;
+                        document.getElementById('edit-post-content-editor').innerHTML = post.content;
+                        document.getElementById('edit-post-excerpt').value = post.excerpt;
+                        document.getElementById('edit-post-published').value = post.published.toString();
+                        
+                        // Set featured image preview
+                        const preview = document.getElementById('edit-image-preview');
+                        preview.src = post.featuredImage;
+                        preview.style.display = 'block';
+                        
+                        // Show the edit modal
+                        editPostModal.style.display = 'block';
+                    } else {
+                        showAlert('Post not found!', 'error');
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error getting post: ", error);
+                    showAlert('Error loading post: ' + error.message, 'error');
+                });
+        }
+        
+        // Handle edit post form submission
+        document.getElementById('edit-post-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const postId = document.getElementById('edit-post-id').value;
+            const title = document.getElementById('edit-post-title').value;
+            const category = document.getElementById('edit-post-category').value;
+            const content = document.getElementById('edit-post-content-editor').innerHTML;
+            const excerpt = document.getElementById('edit-post-excerpt').value;
+            const published = document.getElementById('edit-post-published').value === 'true';
+            
+            let updateData = {
+                title: title,
+                category: category,
+                content: content,
+                excerpt: excerpt,
+                published: published,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // If a new image was selected, upload it first
+            if (editImageFile) {
+                const storageRef = storage.ref();
+                const imageRef = storageRef.child('posts/' + Date.now() + '_' + editImageFile.name);
+                
+                imageRef.put(editImageFile)
+                    .then((snapshot) => {
+                        return snapshot.ref.getDownloadURL();
+                    })
+                    .then((downloadURL) => {
+                        updateData.featuredImage = downloadURL;
+                        return db.collection('posts').doc(postId).update(updateData);
+                    })
+                    .then(() => {
+                        showAlert('Post updated successfully!', 'success');
+                        closeEditModal();
+                        loadPostsForManagement();
+                        loadBlogPosts();
+                    })
+                    .catch((error) => {
+                        console.error("Error updating post: ", error);
+                        showAlert('Error updating post: ' + error.message, 'error');
+                    });
+            } else {
+                // No new image, just update the post data
+                db.collection('posts').doc(postId).update(updateData)
+                    .then(() => {
+                        showAlert('Post updated successfully!', 'success');
+                        closeEditModal();
+                        loadPostsForManagement();
+                        loadBlogPosts();
+                    })
+                    .catch((error) => {
+                        console.error("Error updating post: ", error);
+                        showAlert('Error updating post: ' + error.message, 'error');
+                    });
+            }
+        });
+        
+        // Close edit modal
+        function closeEditModal() {
+            editPostModal.style.display = 'none';
+            editImageFile = null;
         }
         
         // Delete post function
@@ -1287,16 +1929,8 @@
                         document.getElementById('post-modal-author').textContent = 'By ' + post.author;
                         document.getElementById('post-modal-date').textContent = post.createdAt?.toDate().toLocaleDateString() || 'Recently';
                         
-                        // Format the content with paragraphs
-                        const content = post.content;
-                        const paragraphs = content.split('\n').filter(p => p.trim() !== '');
-                        let formattedContent = '';
-                        
-                        paragraphs.forEach(paragraph => {
-                            formattedContent += `<p>${paragraph}</p>`;
-                        });
-                        
-                        document.getElementById('post-modal-content').innerHTML = formattedContent;
+                        // Set the content directly (it's already HTML from the editor)
+                        document.getElementById('post-modal-content').innerHTML = post.content;
                     } else {
                         document.getElementById('post-modal-content').innerHTML = '<p>Post not found.</p>';
                     }
@@ -1319,16 +1953,78 @@
             }
         });
         
+        editPostModal.addEventListener('click', function(event) {
+            if (event.target === editPostModal) {
+                closeEditModal();
+            }
+        });
+        
         // Close modal with Escape key
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closePostModal();
+                closeEditModal();
             }
         });
+        
+        // Initialize rich text editor
+        function initEditor(toolbarId, editorId, hiddenInputId) {
+            const toolbar = document.getElementById(toolbarId);
+            const editor = document.getElementById(editorId);
+            const hiddenInput = document.getElementById(hiddenInputId);
+            
+            // Add event listeners to toolbar buttons
+            toolbar.addEventListener('click', function(e) {
+                if (e.target.tagName === 'BUTTON') {
+                    e.preventDefault();
+                    const command = e.target.dataset.command;
+                    const value = e.target.dataset.value;
+                    
+                    if (command === 'createLink') {
+                        const url = prompt('Enter the URL:');
+                        if (url) {
+                            document.execCommand(command, false, url);
+                        }
+                    } else if (command === 'insertImage') {
+                        // This will be handled separately
+                    } else {
+                        document.execCommand(command, false, value);
+                    }
+                    
+                    // Update the hidden input with the editor content
+                    hiddenInput.value = editor.innerHTML;
+                    
+                    // Focus back to the editor
+                    editor.focus();
+                }
+            });
+            
+            // Update hidden input when editor content changes
+            editor.addEventListener('input', function() {
+                hiddenInput.value = editor.innerHTML;
+            });
+            
+            // Handle image insertion
+            const insertImageBtn = document.getElementById(toolbarId === 'toolbar' ? 'insertImageBtn' : 'edit-insertImageBtn');
+            insertImageBtn.addEventListener('click', function() {
+                const url = prompt('Enter image URL:');
+                if (url) {
+                    document.execCommand('insertImage', false, url);
+                    hiddenInput.value = editor.innerHTML;
+                    editor.focus();
+                }
+            });
+        }
         
         // Initialize the blog
         document.addEventListener('DOMContentLoaded', function() {
             loadBlogPosts();
+            
+            // Initialize editors after DOM is fully loaded
+            setTimeout(() => {
+                initEditor('toolbar', 'post-content-editor', 'post-content');
+                initEditor('edit-toolbar', 'edit-post-content-editor', 'edit-post-content');
+            }, 500);
         });
     </script>
 </body>
