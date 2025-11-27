@@ -1432,6 +1432,24 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        /* Ensure links don't break the design */
+        .grid-post-card a, .post-card a {
+            text-decoration: none !important;
+            color: inherit !important;
+            display: block;
+            height: 100%;
+        }
+
+        .grid-post-card a:hover, .post-card a:hover {
+            text-decoration: none !important;
+            color: inherit !important;
+        }
+
+        /* Ensure the back button stays visible */
+        .header-container .btn-outline {
+            display: inline-block !important;
+        }
     </style>
 </head>
 <body>
@@ -1447,7 +1465,7 @@
                 </div>
                 <nav>
                     <ul>
-                        <li><a href="index.html">Home</a></li>
+                        <li><a href="#" onclick="goBackToHomepage(); return false;">Home</a></li>
                         <li><a href="categories.html">Categories</a></li>
                         <li><a href="about.html">About</a></li>
                         <li><a href="contact.html">Contact</a></li>
@@ -1517,7 +1535,7 @@
                         <div class="footer-links">
                             <h3>Quick Links</h3>
                             <ul>
-                                <li><a href="index.html">Home</a></li>
+                                <li><a href="#" onclick="goBackToHomepage(); return false;">Home</a></li>
                                 <li><a href="categories.html">Categories</a></li>
                                 <li><a href="about.html">About Us</a></li>
                                 <li><a href="contact.html">Contact</a></li>
@@ -1587,7 +1605,7 @@
                         <div class="footer-links">
                             <h3>Quick Links</h3>
                             <ul>
-                                <li><a href="index.html">Home</a></li>
+                                <li><a href="#" onclick="goBackToHomepage(); return false;">Home</a></li>
                                 <li><a href="categories.html">Categories</a></li>
                                 <li><a href="about.html">About Us</a></li>
                                 <li><a href="contact.html">Contact</a></li>
@@ -2228,11 +2246,48 @@
                 .replace(/^-+|-+$/g, '');
         }
         
+        // Function to update URL with slug
+        function updateURLWithSlug(post) {
+            const slug = createSlug(post.title);
+            const newURL = `${window.location.origin}${window.location.pathname}?post=${slug}&id=${post.id}`;
+            window.history.pushState({ postId: post.id }, post.title, newURL);
+        }
+        
+        // Function to update URL for homepage
+        function updateURLForHomepage() {
+            const newURL = `${window.location.origin}${window.location.pathname}`;
+            window.history.pushState({}, 'GhanaLens - Your Window to Ghana', newURL);
+        }
+        
+        // Function to get URL parameters
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // Function to load post from URL
+        function loadPostFromURL() {
+            const postId = getUrlParameter('id');
+            const postSlug = getUrlParameter('post');
+            
+            if (postId && allPosts.length > 0) {
+                const post = allPosts.find(p => p.id === postId);
+                if (post) {
+                    navigateToPost(post);
+                    return true;
+                }
+            }
+            return false;
+        }
+        
         // Navigate to post detail page
         function navigateToPost(post) {
             // Show post detail view and hide homepage
             document.getElementById('homepage-content').style.display = 'none';
             document.getElementById('post-detail-view').style.display = 'block';
+            
+            // Update URL with slug
+            updateURLWithSlug(post);
             
             // Load and display the post
             loadPostDetail(post);
@@ -2264,6 +2319,7 @@
             if (post.featuredImage) {
                 featuredImage.src = post.featuredImage;
                 featuredImage.alt = post.title;
+                featuredImage.style.display = 'block';
             } else {
                 featuredImage.style.display = 'none';
             }
@@ -2288,6 +2344,9 @@
             document.getElementById('homepage-content').style.display = 'block';
             document.title = 'GhanaLens - Your Window to Ghana';
             currentPostId = null;
+            
+            // Update URL for homepage
+            updateURLForHomepage();
         }
         
         // Load comments for a post
@@ -2481,7 +2540,18 @@
                 const postCard = document.createElement('div');
                 postCard.className = `grid-post-card ${isFeatured ? 'featured' : ''}`;
                 
-                postCard.addEventListener('click', () => navigateToPost(post));
+                // Use proper anchor for SEO and accessibility
+                const postLink = document.createElement('a');
+                postLink.href = `?post=${createSlug(post.title)}&id=${post.id}`;
+                postLink.style.textDecoration = 'none';
+                postLink.style.color = 'inherit';
+                postLink.style.display = 'block';
+                postLink.style.height = '100%';
+                
+                postLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navigateToPost(post);
+                });
                 
                 const formattedDate = post.createdAt?.toDate().toLocaleDateString() || 'Recently';
                 
@@ -2505,7 +2575,7 @@
                 }
                 
                 if (isFeatured) {
-                    postCard.innerHTML = `
+                    postLink.innerHTML = `
                         <div class="post-image-container">
                             <img src="${post.featuredImage || 'https://via.placeholder.com/600x400?text=Featured+Story'}" alt="${post.title}" class="grid-post-image">
                             <div class="post-category-tag">${post.category || 'Uncategorized'}</div>
@@ -2523,7 +2593,7 @@
                         </div>
                     `;
                 } else {
-                    postCard.innerHTML = `
+                    postLink.innerHTML = `
                         <div class="post-image-container">
                             <img src="${post.featuredImage || 'https://via.placeholder.com/400x250?text=Story'}" alt="${post.title}" class="grid-post-image">
                             <div class="post-category-tag">${post.category || 'Uncategorized'}</div>
@@ -2542,6 +2612,7 @@
                     `;
                 }
                 
+                postCard.appendChild(postLink);
                 postsGrid.appendChild(postCard);
             });
         }
@@ -2562,7 +2633,21 @@
             featuredPostsToShow.forEach((post) => {
                 const postCard = document.createElement('div');
                 postCard.className = 'post-card';
-                postCard.innerHTML = `
+                
+                // Use proper anchor for SEO and accessibility
+                const postLink = document.createElement('a');
+                postLink.href = `?post=${createSlug(post.title)}&id=${post.id}`;
+                postLink.style.textDecoration = 'none';
+                postLink.style.color = 'inherit';
+                postLink.style.display = 'block';
+                postLink.style.height = '100%';
+                
+                postLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    navigateToPost(post);
+                });
+                
+                postLink.innerHTML = `
                     <img src="${post.featuredImage || 'https://via.placeholder.com/300x200?text=Image+Not+Found'}" alt="${post.title}" class="post-image">
                     <div class="post-content-old">
                         <span class="post-category">${post.category || 'Uncategorized'}</span>
@@ -2575,7 +2660,7 @@
                     </div>
                 `;
                 
-                postCard.addEventListener('click', () => navigateToPost(post));
+                postCard.appendChild(postLink);
                 featuredPosts.appendChild(postCard);
             });
         }
@@ -2670,6 +2755,22 @@
             document.getElementById('login-alert').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
         }
         
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            const postId = getUrlParameter('id');
+            
+            if (postId) {
+                // Try to load post from URL
+                if (!loadPostFromURL()) {
+                    // If post not found, go to homepage
+                    goBackToHomepage();
+                }
+            } else {
+                // No post in URL, show homepage
+                goBackToHomepage();
+            }
+        });
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             console.log("Initializing GhanaLens...");
@@ -2861,6 +2962,15 @@
                         document.getElementById('admin-dashboard').style.display = 'none';
                         loadBlogPosts();
                     }
+
+                    // After loading posts, check if we should load a post from URL
+                    setTimeout(() => {
+                        if (!loadPostFromURL()) {
+                            // If no post in URL or post not found, ensure homepage is shown
+                            document.getElementById('homepage-content').style.display = 'block';
+                            document.getElementById('post-detail-view').style.display = 'none';
+                        }
+                    }, 1000);
                 })
                 .catch((error) => {
                     console.error("Error loading categories: ", error);
