@@ -836,7 +836,7 @@
                 <div class="logo">
                     <!-- Placeholder for logo - replace with your own -->
                     <img src="images/logo.png" alt="GhanaLens Logo">
-                    <h1>GhanaLens</h1>
+                    <h1></h1>
                 </div>
                 <nav>
                     <ul>
@@ -1322,9 +1322,11 @@
             loadMediaLibrary();
         }
         
-        // Load categories from Firestore
+        // Load categories from Firestore - COMPLETELY REWRITTEN
         function loadCategories() {
-            db.collection('categories').get()
+            console.log("Loading categories...");
+            
+            return db.collection('categories').orderBy('name').get()
                 .then((querySnapshot) => {
                     categories = [];
                     const categorySelect = document.getElementById('post-category');
@@ -1338,8 +1340,9 @@
                         editCategorySelect.removeChild(editCategorySelect.lastChild);
                     }
                     
+                    // If no categories exist, create default ones
                     if (querySnapshot.empty) {
-                        // Add default categories if none exist
+                        console.log("No categories found, creating default categories...");
                         const defaultCategories = [
                             { name: 'News', description: 'General news from Ghana' },
                             { name: 'Local News', description: 'Local news and events' },
@@ -1350,19 +1353,22 @@
                             { name: 'Technology', description: 'Tech news and innovations' }
                         ];
                         
-                        defaultCategories.forEach(cat => {
-                            db.collection('categories').add({
+                        const promises = defaultCategories.map(cat => {
+                            return db.collection('categories').add({
                                 name: cat.name,
                                 description: cat.description,
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
                             });
                         });
                         
-                        // Reload categories after adding defaults
-                        loadCategories();
-                        return;
+                        return Promise.all(promises).then(() => {
+                            console.log("Default categories created, reloading...");
+                            // Reload categories after adding defaults
+                            return loadCategories();
+                        });
                     }
                     
+                    // Process existing categories
                     querySnapshot.forEach((doc) => {
                         const category = {
                             id: doc.id,
@@ -1375,17 +1381,24 @@
                         option.value = category.name;
                         option.textContent = category.name;
                         
-                        const editOption = option.cloneNode(true);
+                        const editOption = document.createElement('option');
+                        editOption.value = category.name;
+                        editOption.textContent = category.name;
                         
                         categorySelect.appendChild(option);
                         editCategorySelect.appendChild(editOption);
                     });
                     
+                    console.log(`Loaded ${categories.length} categories:`, categories.map(c => c.name));
+                    
                     // Update categories list in admin
                     updateCategoriesList();
+                    return categories;
                 })
                 .catch((error) => {
                     console.error("Error loading categories: ", error);
+                    showAlert('Error loading categories: ' + error.message, 'error');
+                    return [];
                 });
         }
         
@@ -1559,14 +1572,14 @@
                     return snapshot.ref.getDownloadURL();
                 })
                 .then((downloadURL) => {
-                    // Save post to Firestore
+                    // Save post to Firestore - Use "GhanaLens" as author instead of email
                     return db.collection('posts').add({
                         title: title,
                         category: category,
                         content: content,
                         excerpt: excerpt,
                         featuredImage: downloadURL,
-                        author: currentUser.email,
+                        author: "GhanaLens", // Changed from currentUser.email
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         published: true
                     });
@@ -1597,8 +1610,15 @@
             const name = document.getElementById('category-name').value;
             const description = document.getElementById('category-description').value;
             
+            if (!name.trim()) {
+                showAlert('Please enter a category name', 'error');
+                return;
+            }
+            
             // Check if category already exists
-            const existingCategory = categories.find(cat => cat.name.toLowerCase() === name.toLowerCase());
+            const existingCategory = categories.find(cat => 
+                cat.name.toLowerCase() === name.toLowerCase()
+            );
             if (existingCategory) {
                 showAlert('Category already exists!', 'error');
                 return;
@@ -1613,7 +1633,8 @@
             .then(() => {
                 showAlert('Category added successfully!', 'success');
                 document.getElementById('add-category-form').reset();
-                loadCategories();
+                // Reload categories to update the list
+                return loadCategories();
             })
             .catch((error) => {
                 console.error("Error adding category: ", error);
@@ -1717,21 +1738,52 @@
             }
         });
         
-        // Edit post function
+        // Edit post function - COMPLETELY REWRITTEN
         function editPost(postId) {
+            console.log("Editing post:", postId);
+            
+            // First ensure categories are loaded
+            loadCategories().then(() => {
+                console.log("Categories loaded, now fetching post data...");
+                // After categories are loaded, fetch the post
+                fetchPostForEditing(postId);
+            }).catch((error) => {
+                console.error("Error loading categories for edit: ", error);
+                // Still try to fetch the post even if categories fail
+                fetchPostForEditing(postId);
+            });
+        }
+        
+        // Fetch post data for editing - COMPLETELY REWRITTEN
+        function fetchPostForEditing(postId) {
+            console.log("Fetching post data for:", postId);
+            
             // Fetch the post data
             db.collection('posts').doc(postId).get()
                 .then((doc) => {
                     if (doc.exists) {
                         const post = doc.data();
+                        console.log("Post data:", post);
                         
                         // Populate the edit form
                         document.getElementById('edit-post-id').value = postId;
                         document.getElementById('edit-post-title').value = post.title;
-                        document.getElementById('edit-post-category').value = post.category;
+                        
+                        // Set category - IMPORTANT: Wait for DOM to be ready
+                        setTimeout(() => {
+                            const editCategorySelect = document.getElementById('edit-post-category');
+                            console.log("Available categories in dropdown:", Array.from(editCategorySelect.options).map(opt => opt.value));
+                            console.log("Setting category to:", post.category);
+                            
+                            editCategorySelect.value = post.category;
+                            
+                            // Verify the value was set
+                            console.log("Category select value after setting:", editCategorySelect.value);
+                        }, 100);
+                        
                         document.getElementById('edit-post-content-editor').innerHTML = post.content;
                         document.getElementById('edit-post-excerpt').value = post.excerpt;
-                        document.getElementById('edit-post-published').value = post.published.toString();
+                        document.getElementById('edit-post-published').value = post.published ? 'true' : 'false';
                         
                         // Set featured image preview
                         const preview = document.getElementById('edit-image-preview');
@@ -1740,6 +1792,7 @@
                         
                         // Show the edit modal
                         editPostModal.style.display = 'block';
+                        console.log("Edit modal displayed");
                     } else {
                         showAlert('Post not found!', 'error');
                     }
@@ -1849,9 +1902,8 @@
         function loadBlogPosts() {
             featuredPosts.innerHTML = '<div class="loading">Loading posts...</div>';
             
-            // Simple query without complex filtering to avoid index issues
-            db.collection('posts')
-                .get()
+            // Get all posts from Firestore
+            db.collection('posts').get()
                 .then((querySnapshot) => {
                     if (querySnapshot.empty) {
                         featuredPosts.innerHTML = '<p>No posts available. Create your first post in the admin dashboard!</p>';
@@ -1862,10 +1914,23 @@
                     let posts = [];
                     
                     querySnapshot.forEach((doc) => {
-                        const post = doc.data();
-                        post.id = doc.id;
-                        posts.push(post);
+                        const postData = doc.data();
+                        const post = {
+                            id: doc.id,
+                            ...postData
+                        };
+                        
+                        // Only show published posts on the main site
+                        if (post.published !== false) {
+                            posts.push(post);
+                        }
                     });
+                    
+                    // If no published posts
+                    if (posts.length === 0) {
+                        featuredPosts.innerHTML = '<p>No published posts available.</p>';
+                        return;
+                    }
                     
                     // Sort posts by date manually (newest first)
                     posts.sort((a, b) => {
@@ -1889,7 +1954,7 @@
                                 <h3 class="post-title">${post.title}</h3>
                                 <p class="post-excerpt">${post.excerpt}</p>
                                 <div class="post-meta">
-                                    <span>By ${post.author}</span>
+                                    <span>By GhanaLens</span>
                                     <span>${post.createdAt?.toDate().toLocaleDateString() || 'Recently'}</span>
                                 </div>
                             </div>
@@ -1926,7 +1991,7 @@
                         document.getElementById('post-modal-title').textContent = post.title;
                         document.getElementById('post-modal-image').src = post.featuredImage;
                         document.getElementById('post-modal-category').textContent = post.category;
-                        document.getElementById('post-modal-author').textContent = 'By ' + post.author;
+                        document.getElementById('post-modal-author').textContent = 'By GhanaLens';
                         document.getElementById('post-modal-date').textContent = post.createdAt?.toDate().toLocaleDateString() || 'Recently';
                         
                         // Set the content directly (it's already HTML from the editor)
