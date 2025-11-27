@@ -214,6 +214,7 @@
             overflow: hidden;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s;
+            cursor: pointer;
         }
         
         .post-card:hover {
@@ -539,6 +540,85 @@
             color: var(--medium-gray);
         }
         
+        /* Post Detail Modal */
+        .post-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 3000;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+        
+        .post-modal-content {
+            background-color: white;
+            margin: 20px auto;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .post-modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .post-modal-title {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--medium-gray);
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: var(--red);
+        }
+        
+        .post-modal-body {
+            padding: 20px;
+        }
+        
+        .post-modal-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .post-modal-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            color: var(--medium-gray);
+            font-size: 0.9rem;
+        }
+        
+        .post-modal-content-text {
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        
+        .post-modal-content-text p {
+            margin-bottom: 15px;
+        }
+        
         /* Responsive Design */
         @media (max-width: 768px) {
             .header-container {
@@ -560,6 +640,15 @@
             
             .admin-sidebar {
                 width: 100%;
+            }
+            
+            .post-modal-content {
+                width: 95%;
+                margin: 10px auto;
+            }
+            
+            .post-modal-title {
+                font-size: 1.4rem;
             }
         }
     </style>
@@ -592,7 +681,7 @@
             <div class="container">
                 <h2>Your Window to Ghana</h2>
                 <p>Stay updated with the latest news, stories, and insights from Ghana and beyond</p>
-                <button class="btn btn-filled" onclick="loadBlogPosts()">Explore Articles</button>
+                <button class="btn btn-filled" onclick="loadBlogPosts()">Refresh Posts</button>
             </div>
         </section>
 
@@ -780,6 +869,27 @@
         </div>
     </div>
 
+    <!-- Post Detail Modal -->
+    <div id="post-modal" class="post-modal">
+        <div class="post-modal-content">
+            <div class="post-modal-header">
+                <h2 class="post-modal-title" id="post-modal-title">Post Title</h2>
+                <button class="close-modal" onclick="closePostModal()">&times;</button>
+            </div>
+            <div class="post-modal-body">
+                <img id="post-modal-image" src="" alt="Post Image" class="post-modal-image">
+                <div class="post-modal-meta">
+                    <span id="post-modal-category" class="post-category">Category</span>
+                    <span id="post-modal-author">By Author</span>
+                    <span id="post-modal-date">Date</span>
+                </div>
+                <div class="post-modal-content-text" id="post-modal-content">
+                    <!-- Full post content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Login Modal -->
     <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center;">
         <div style="background-color: white; padding: 30px; border-radius: 8px; width: 100%; max-width: 400px;">
@@ -827,6 +937,7 @@
         const loginAlert = document.getElementById('login-alert');
         const alertContainer = document.getElementById('alert-container');
         const postsList = document.getElementById('posts-list');
+        const postModal = document.getElementById('post-modal');
         
         // Global variables
         let currentUser = null;
@@ -878,7 +989,7 @@
                     blogSite.style.display = 'none';
                     adminDashboard.style.display = 'block';
                     loadAdminData();
-                    document.getElementById('admin-email').textContent = user.email;
+                    document.getElementById('admin-email').textContent = currentUser.email;
                 })
                 .catch((error) => {
                     const errorCode = error.code;
@@ -900,6 +1011,8 @@
                 currentUser = null;
                 blogSite.style.display = 'block';
                 adminDashboard.style.display = 'none';
+                // Reload posts when returning to blog site
+                loadBlogPosts();
             }
         });
         
@@ -1027,8 +1140,11 @@
                     document.getElementById('image-preview').style.display = 'none';
                     currentImageFile = null;
                     
-                    // Update posts count
+                    // Update posts count and reload posts
                     loadAdminData();
+                    
+                    // Also reload blog posts on main site
+                    loadBlogPosts();
                 })
                 .catch((error) => {
                     console.error("Error adding post: ", error);
@@ -1065,6 +1181,8 @@
                         showAlert('Post deleted successfully!', 'success');
                         loadPostsForManagement();
                         loadAdminData();
+                        // Also reload blog posts on main site
+                        loadBlogPosts();
                     })
                     .catch((error) => {
                         console.error("Error deleting post: ", error);
@@ -1089,25 +1207,41 @@
         function loadBlogPosts() {
             featuredPosts.innerHTML = '<div class="loading">Loading posts...</div>';
             
+            // Simple query without complex filtering to avoid index issues
             db.collection('posts')
-                .where('published', '==', true)
-                .orderBy('createdAt', 'desc')
-                .limit(6)
                 .get()
                 .then((querySnapshot) => {
                     if (querySnapshot.empty) {
-                        featuredPosts.innerHTML = '<p>No posts available.</p>';
+                        featuredPosts.innerHTML = '<p>No posts available. Create your first post in the admin dashboard!</p>';
                         return;
                     }
                     
                     featuredPosts.innerHTML = '';
+                    let posts = [];
+                    
                     querySnapshot.forEach((doc) => {
                         const post = doc.data();
-                        
+                        post.id = doc.id;
+                        posts.push(post);
+                    });
+                    
+                    // Sort posts by date manually (newest first)
+                    posts.sort((a, b) => {
+                        const dateA = a.createdAt ? a.createdAt.toDate() : new Date(0);
+                        const dateB = b.createdAt ? b.createdAt.toDate() : new Date(0);
+                        return dateB - dateA;
+                    });
+                    
+                    // Limit to 6 posts
+                    posts = posts.slice(0, 6);
+                    
+                    // Display posts
+                    posts.forEach((post) => {
                         const postCard = document.createElement('div');
                         postCard.className = 'post-card';
+                        postCard.setAttribute('data-post-id', post.id);
                         postCard.innerHTML = `
-                            <img src="${post.featuredImage}" alt="${post.title}" class="post-image" onerror="this.src='images/placeholder.jpg'">
+                            <img src="${post.featuredImage}" alt="${post.title}" class="post-image" onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'">
                             <div class="post-content">
                                 <span class="post-category">${post.category}</span>
                                 <h3 class="post-title">${post.title}</h3>
@@ -1119,14 +1253,78 @@
                             </div>
                         `;
                         
+                        // Add click event to open post
+                        postCard.addEventListener('click', function() {
+                            openPostModal(post.id);
+                        });
+                        
                         featuredPosts.appendChild(postCard);
                     });
                 })
                 .catch((error) => {
                     console.error("Error getting posts: ", error);
-                    featuredPosts.innerHTML = '<p>Error loading posts.</p>';
+                    featuredPosts.innerHTML = '<p>Error loading posts. Check console for details.</p>';
                 });
         }
+        
+        // Open post modal with full content
+        function openPostModal(postId) {
+            // Show loading state
+            document.getElementById('post-modal-title').textContent = 'Loading...';
+            document.getElementById('post-modal-content').innerHTML = '<div class="loading">Loading post content...</div>';
+            postModal.style.display = 'block';
+            
+            // Fetch the specific post from Firestore
+            db.collection('posts').doc(postId).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const post = doc.data();
+                        
+                        // Update modal with post data
+                        document.getElementById('post-modal-title').textContent = post.title;
+                        document.getElementById('post-modal-image').src = post.featuredImage;
+                        document.getElementById('post-modal-category').textContent = post.category;
+                        document.getElementById('post-modal-author').textContent = 'By ' + post.author;
+                        document.getElementById('post-modal-date').textContent = post.createdAt?.toDate().toLocaleDateString() || 'Recently';
+                        
+                        // Format the content with paragraphs
+                        const content = post.content;
+                        const paragraphs = content.split('\n').filter(p => p.trim() !== '');
+                        let formattedContent = '';
+                        
+                        paragraphs.forEach(paragraph => {
+                            formattedContent += `<p>${paragraph}</p>`;
+                        });
+                        
+                        document.getElementById('post-modal-content').innerHTML = formattedContent;
+                    } else {
+                        document.getElementById('post-modal-content').innerHTML = '<p>Post not found.</p>';
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error getting post: ", error);
+                    document.getElementById('post-modal-content').innerHTML = '<p>Error loading post. Please try again.</p>';
+                });
+        }
+        
+        // Close post modal
+        function closePostModal() {
+            postModal.style.display = 'none';
+        }
+        
+        // Close modal when clicking outside content
+        postModal.addEventListener('click', function(event) {
+            if (event.target === postModal) {
+                closePostModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closePostModal();
+            }
+        });
         
         // Initialize the blog
         document.addEventListener('DOMContentLoaded', function() {
